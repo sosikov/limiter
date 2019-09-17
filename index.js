@@ -8,7 +8,11 @@ class Limiter {
     this.urls = [...urls];
     this.commonLimiter = pLimit(commonLimiter);
     this.domainLimiter = domainLimiter;
-    this.counter = urls.length;
+    this.init();
+  }
+
+  init() {
+    this.counter = this.urls.length;
     this.domainsLimiters = {};
   }
 
