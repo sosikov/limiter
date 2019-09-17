@@ -1,13 +1,14 @@
 const pLimit = require('p-limit');
 const urls = require('./urls');
 
-const ajax = url => new Promise(resolve => setTimeout(() => resolve(url), 1500));
+const ajax = url => new Promise(resolve => setTimeout(() => resolve(url), 2000));
 
 class Limiter {
   constructor(urls, commonLimiter, domainLimiter) {
     this.urls = [...urls];
     this.commonLimiter = pLimit(commonLimiter);
     this.domainLimiter = domainLimiter;
+    this.counter = urls.length;
     this.domainsLimiters = {};
   }
 
@@ -25,15 +26,17 @@ class Limiter {
   }
 
   request(url, resolve) {
-    this.commonLimiter(() => 
+    this.commonLimiter(() =>
       ajax(url).then(res => {
         console.log('res >', res);
-        if (this.commonLimiter.activeCount === 1) {
+        this.counter -= 1;
+
+        if (!this.counter) {
           resolve();
         }
-      })
-    );
+      }));
   }
+
 }
 
 const loading = new Limiter(urls, 10, 3)
