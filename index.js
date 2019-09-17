@@ -8,48 +8,26 @@ const getDomain = url => url.split('.')[0];
 class Limiter {
   constructor(urls, limitRequests, limitPerDomain) {
     this.urls = [ ...urls ];
+    this.commonLimiter = pLimit(limitRequests);
     this.limitPerDomain = limitPerDomain;
-    this.limitRequests = pLimit(limitRequests);
-
-    this.urlsByDomain = {};
-    this.activeRequestsByDomain = {};
+    this.domainsLimiters = {};
   }
 
-  parseUrlsByDomain() {
+  request(url) {
+    this.commonLimiter( () => ajax(url).then(res => console.log('res', res)) );
+  }
+
+  sendRequests() {
     this.urls.forEach(url => {
       const domain = getDomain(url);
-      if (!this.urlsByDomain[domain]) {
-        this.urlsByDomain[domain] = [];
-        this.activeRequestsByDomain[domain] = 0;
+
+      if(!this.domainsLimiters[domain]) {
+        this.domainsLimiters[domain] = pLimit(this.limitPerDomain);
       }
-      this.urlsByDomain[domain].push(url);
+      this.domainsLimiters[domain]( () => this.request(url) );
     });
-  }
-
-  updateQueue() {
-    for (const domain in this.urlsByDomain) {
-      this.urlsByDomain[domain] = this.urlsByDomain[domain].reduce((urlsQueue, url) => {
-        if (this.activeRequestsByDomain[domain] < this.limitPerDomain) {
-          this.activeRequestsByDomain[domain] += 1;
-          this.makeRequest(url);
-        } else {
-          urlsQueue.push(url);
-        }
-        return urlsQueue;
-      }, []);
-    }
-  }
-
-  makeRequest(url) {
-    this.limitRequests(() => ajax(url).then(res => {
-      console.log('res >', res);
-      this.activeRequestsByDomain[getDomain(url)] -= 1;
-      this.updateQueue();
-    }));
   }
 }
 
-
 const limiter = new Limiter(urls, 10, 3);
-limiter.parseUrlsByDomain();
-limiter.updateQueue();
+limiter.sendRequests();
