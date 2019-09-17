@@ -14,20 +14,27 @@ class Limiter {
   }
 
   request(url) {
-    this.commonLimiter( () => ajax(url).then(res => console.log('res', res)) );
+    return this.commonLimiter( () => ajax(url).then(res => console.log('res', res)) );
   }
 
   sendRequests() {
-    this.urls.forEach(url => {
+    const allPromises = this.urls.reduce((promises, url) => {
       const domain = getDomain(url);
 
       if(!this.domainsLimiters[domain]) {
         this.domainsLimiters[domain] = pLimit(this.limitPerDomain);
       }
-      this.domainsLimiters[domain]( () => this.request(url) );
-    });
+      const promise = this.domainsLimiters[domain]( () => this.request(url) );
+      promises.push(promise);
+
+      return promises;
+    }, []);
+
+    return Promise.all(allPromises);
   }
 }
 
 const limiter = new Limiter(urls, 10, 3);
-limiter.sendRequests();
+const done = limiter.sendRequests();
+
+done.then(() => console.log('finish!'));
