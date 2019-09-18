@@ -21,10 +21,7 @@ class Limiter {
     return new Promise(resolve => {
       this.urls.forEach(url => {
         const domain = url.split('.')[0];
-
-        if(!this.domainsLimiters[domain]) {
-          this.domainsLimiters[domain] = pLimit(this.domainLimiter);
-        }
+        this.domainsLimiters[domain] = this.domainsLimiters[domain] || pLimit(this.domainLimiter);
         this.domainsLimiters[domain](() => this.request(url, resolve));
       });
     });
@@ -35,10 +32,8 @@ class Limiter {
       ajax(url).then(res => {
         console.log('res >', res);
         this.counter -= 1;
-
-        if (!this.counter) {
-          resolve();
-        }
+        
+        if (!this.counter) resolve();
       }));
   }
 
