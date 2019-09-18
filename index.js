@@ -1,7 +1,8 @@
-const pLimit = require('p-limit');
+// const pLimit = require('p-limit');
+const pLimit = require('./plimit');
 const urls = require('./urls');
 
-const ajax = url => new Promise(resolve => setTimeout(() => resolve(url), 2000));
+const ajax = url => new Promise(resolve => setTimeout(() => resolve(url), 1500));
 
 class Limiter {
   constructor(urls, commonLimiter, domainLimiter) {
@@ -30,7 +31,7 @@ class Limiter {
   }
 
   request(url, resolve) {
-    this.commonLimiter(() =>
+    return this.commonLimiter(() =>
       ajax(url).then(res => {
         console.log('res >', res);
         this.counter -= 1;
