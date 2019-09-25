@@ -12,9 +12,7 @@ const Deferred = function(fn) {
     });
   }
 
-  setImmediate(function() {
-    if (fn) fn(resolve);
-  });
+  if (fn) fn(resolve);
 
   return {
     then,
