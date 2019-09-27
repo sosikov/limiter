@@ -1,28 +1,26 @@
-const Deferred = require('./deferred');
-
 const pLimit = amount => {
   let queue = [];
   let counter = 0;
-  
-  const limiter = func => new Deferred(resolve => {
-    prepare(func, resolve);
-  });
 
-  const prepare = (func, resolve) => {
-    counter < amount ? request(func, resolve) : queue.push({func, resolve});
-  };
-
-  const request = (func, resolve) => {
+  const request = (fn, resolve) => {
     counter += 1;
-
-    func().then(() => {
-      resolve();
+    fn().then(() => {
       counter -= 1;
+      resolve();
+
       if (queue.length) {
         let next = queue.shift();
-        prepare(next.func, next.resolve);
+        prepare(next.fn, next.resolve);
       }
     });
+  };
+
+  const prepare = (fn, resolve) => {
+    counter < amount ? request(fn, resolve) : queue.push({fn, resolve});
+  };
+
+  const limiter = fn => {
+    return new Promise(resolve => prepare(fn, resolve));
   };
 
   return limiter;

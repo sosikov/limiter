@@ -1,8 +1,8 @@
 {
   "name": "module",
-  "main": "index.js",
+  "main": "limiter.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node limiter.js"
   },
   "dependencies": {
     "p-limit": "^2.2.1",
